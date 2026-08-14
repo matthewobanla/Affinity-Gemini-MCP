@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "affinity": {
+      "command": "C:\\path\\to\\affinity-gemini-mcp\\bridge\\affinity-mcp-bridge.exe"
+    }
+  }
+}
