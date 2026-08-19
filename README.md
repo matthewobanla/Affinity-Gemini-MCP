@@ -1,5 +1,8 @@
 # Affinity MCP Integration for Google Gemini & Antigravity
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Affinity--Gemini--MCP-181717?logo=github)](https://github.com/matthewobanla/Affinity-Gemini-MCP)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Control, automate, and pair-program vector designs, artboards, and layouts in **Affinity by Canva** (Affinity Designer, Photo, and Publisher v2/v3) using **Google Gemini** and **Antigravity IDE**.
 
 ---
@@ -33,7 +36,17 @@ affinity-gemini-mcp/
 
 ## 🚀 Quick Start Guide
 
-### Step 1: Enable MCP in Affinity
+### Step 1: Clone the Repository
+
+```cmd
+git clone https://github.com/matthewobanla/Affinity-Gemini-MCP.git
+cd Affinity-Gemini-MCP
+```
+
+---
+
+### Step 2: Enable MCP in Affinity
+
 1. Open **Affinity Designer**, **Photo**, or **Publisher**.
 2. Go to **Edit** > **Settings** (or **Preferences**).
 3. Select **Model Context Protocol**.
@@ -41,16 +54,19 @@ affinity-gemini-mcp/
 
 ---
 
-### Step 2: Build the Bridge
+### Step 3: Build the Bridge
+
 The bridge is a lightweight C# application with zero external dependencies that connects Antigravity's `stdio` JSON-RPC to Affinity's embedded SSE server.
 
 Run the build script in the `bridge/` folder:
+
 ```cmd
 cd bridge
 build.bat
 ```
 
 *Alternatively, compile manually with `csc` or `dotnet`:*
+
 ```cmd
 csc /target:exe /out:affinity-mcp-bridge.exe bridge\AffinityMcpBridge.cs
 ```
@@ -59,7 +75,8 @@ This will produce `affinity-mcp-bridge.exe`.
 
 ---
 
-### Step 3: Configure Gemini / Antigravity
+### Step 4: Configure Gemini / Antigravity
+
 Add the server entry to your global MCP configuration (`~/.gemini/config/mcp_config.json` on Windows at `C:\Users\<YourUsername>\.gemini\config\mcp_config.json`):
 
 ```json
@@ -74,14 +91,18 @@ Add the server entry to your global MCP configuration (`~/.gemini/config/mcp_con
 
 ---
 
-### Step 4: Install the Agent Skill
+### Step 5: Install the Agent Skill
+
 Copy the `skills/affinity-designer` folder into your Antigravity skills directory:
 
 * **Global Setup** (Available across all projects):
+
   ```text
   C:\Users\<YourUsername>\.gemini\config\skills\affinity-designer\
   ```
+
 * **Project Workspace Setup** (Committed into a project):
+
   ```text
   <YourProjectRoot>\.agents\skills\affinity-designer\
   ```
@@ -122,4 +143,5 @@ Once configured, simply ask Gemini in Antigravity:
 ---
 
 ## 📄 License
+
 MIT License. Free for personal and commercial use.
