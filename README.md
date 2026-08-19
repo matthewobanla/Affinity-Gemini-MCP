@@ -1,6 +1,9 @@
 # Affinity MCP Integration for Google Gemini & Antigravity
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Affinity--Gemini--MCP-181717?logo=github)](https://github.com/matthewobanla/Affinity-Gemini-MCP)
+[![MCP Server](https://img.shields.io/badge/MCP-Protocol-blue.svg)](https://modelcontextprotocol.io/)
+[![Affinity Support](https://img.shields.io/badge/Serif%20Affinity-Designer%20%7C%20Photo%20%7C%20Publisher-orange.svg)](https://affinity.serif.com/)
+[![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Google%20Gemini-8E75B2.svg)](https://deepmind.google/technologies/gemini/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Control, automate, and pair-program vector designs, artboards, and layouts in **Affinity by Canva** (Affinity Designer, Photo, and Publisher v2/v3) using **Google Gemini** and **Antigravity IDE**.
@@ -9,11 +12,11 @@ Control, automate, and pair-program vector designs, artboards, and layouts in **
 
 ## 🌟 Features
 
-* **Direct Vector Generation**: Create complex vector shapes, parametric curves, Bézier paths, squircle app icons, and polygons.
-* **Lighting & Shading**: Generate multi-stop linear and radial gradient fills with custom transform matrices, bevels, and specular highlights.
-* **Artboard & Spread Control**: Query artboard geometries, target specific artboards, and manage document layers.
-* **Real-Time Visual Feedback**: Built-in `render_spread` and `render_selection` tools allow Gemini to visually inspect the canvas in real time.
-* **Atomic Undo**: Every generated design or layout is batched into an atomic transaction for single-step undo.
+- **Direct Vector Generation**: Create complex vector shapes, parametric curves, Bézier paths, squircle app icons, and polygons.
+- **Lighting & Shading**: Generate multi-stop linear and radial gradient fills with custom transform matrices, bevels, and specular highlights.
+- **Artboard & Spread Control**: Query artboard geometries, target specific artboards, and manage document layers.
+- **Real-Time Visual Feedback**: Built-in `render_spread` and `render_selection` tools allow Gemini to visually inspect the canvas in real time.
+- **Atomic Undo**: Every generated design or layout is batched into an atomic transaction for single-step undo.
 
 ---
 
@@ -95,13 +98,13 @@ Add the server entry to your global MCP configuration (`~/.gemini/config/mcp_con
 
 Copy the `skills/affinity-designer` folder into your Antigravity skills directory:
 
-* **Global Setup** (Available across all projects):
+- **Global Setup** (Available across all projects):
 
   ```text
   C:\Users\<YourUsername>\.gemini\config\skills\affinity-designer\
   ```
 
-* **Project Workspace Setup** (Committed into a project):
+- **Project Workspace Setup** (Committed into a project):
 
   ```text
   <YourProjectRoot>\.agents\skills\affinity-designer\
@@ -113,10 +116,10 @@ Copy the `skills/affinity-designer` folder into your Antigravity skills director
 
 Once configured, simply ask Gemini in Antigravity:
 
-* *"Add an isometric cube with specular highlights in the center of the canvas in Affinity"*
-* *"Create 10 different fintech app icons on the second artboard"*
-* *"Generate an 8-pointed star badge with a radial gold gradient and white rim stroke"*
-* *"Inspect the active spread and render a visual preview"*
+- *"Add an isometric cube with specular highlights in the center of the canvas in Affinity"*
+- *"Create 10 different fintech app icons on the second artboard"*
+- *"Generate an 8-pointed star badge with a radial gold gradient and white rim stroke"*
+- *"Inspect the active spread and render a visual preview"*
 
 ---
 
