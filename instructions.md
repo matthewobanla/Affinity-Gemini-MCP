@@ -65,6 +65,7 @@ const { BlendMode, NodeChildType } = require('affinity:common');
 1. **Origin**: `(0, 0)` is the top-left of the active spread or artboard. Positive X moves right; positive Y moves down.
 2. **Units**: Point coordinates are in document units (typically pixels).
 3. **Artboards**: When inserting into an artboard, coordinates are relative to the artboard's origin if targeting the artboard node directly:
+
    ```javascript
    const doc = Document.current;
    const targetArtboard = doc.spreads.first.artboards[0].node;
@@ -76,6 +77,7 @@ const { BlendMode, NodeChildType } = require('affinity:common');
 ## 5. Color, Fill & Gradient Math
 
 ### Solid Colors
+
 - `RGBA8(r, g, b, alpha)` takes values `0–255` and directly returns a `Colour` object.
 - `FillDescriptor.createSolid(color, BlendMode.Normal)` creates a solid fill.
 - `FillDescriptor.createNone()` creates a transparent/empty fill.
@@ -86,6 +88,7 @@ const solidFill = FillDescriptor.createSolid(primaryColor, BlendMode.Normal);
 ```
 
 ### Linear & Radial Gradients (Transform Matrices)
+
 Affinity gradient coordinates are transformed using affine matrices (`Transform.data` array of 6 floats):
 
 ```javascript
@@ -134,7 +137,9 @@ const gradientFill = FillDescriptor.create(
 ## 6. Shape & Curve Construction
 
 ### A. Parametric Built-in Shapes
+
 Use `Shape<Type>.create()` and configure parameters:
+
 ```javascript
 const star = ShapeStar.create();
 star.points = 6;
@@ -150,7 +155,9 @@ acnBuilder.addNode(shapeDef);
 ```
 
 ### B. Custom Polygons, Curves & Bézier Paths
+
 Use `CurveBuilder` and `PolyCurve` for arbitrary vector graphics:
+
 ```javascript
 const cb = CurveBuilder.create();
 cb.beginXY(100, 50);
@@ -199,15 +206,20 @@ doc.executeCommand(cmd);
 ## 8. Perception & Verification Loop
 
 Gemini is a multimodal model. Always close the feedback loop after generating artwork:
+
 1. Obtain the document session UUID:
+
    ```javascript
    const uuid = Document.current.sessionUuid;
    ```
+
 2. Call the MCP tool `render_spread`:
+
    ```json
    {
      "document_session_uuid": "<uuid>",
      "spread_index": 0
    }
    ```
+
 3. Inspect the resulting preview image to verify color contrast, spatial alignment, and visual hierarchy.

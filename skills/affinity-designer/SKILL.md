@@ -19,9 +19,9 @@ This skill guides direct vector design, layout generation, and canvas manipulati
 
 Before generating or modifying graphics, probe the document state non-destructively:
 
-- **`affinity://document/info`**: Dimensions, units, color space, session UUID, spread and artboard count.
-- **`affinity://spread/artboards`**: List of all artboards with their bounding boxes (`x, y, width, height`).
-- **`affinity://selection`**: Active selected layers and their node properties.
+* **`affinity://document/info`**: Dimensions, units, color space, session UUID, spread and artboard count.
+* **`affinity://spread/artboards`**: List of all artboards with their bounding boxes (`x, y, width, height`).
+* **`affinity://selection`**: Active selected layers and their node properties.
 
 ---
 
@@ -51,7 +51,9 @@ const { BlendMode, NodeChildType } = require('affinity:common');
 ## Key Design Patterns & SDK Rules
 
 ### 1. Colors & RGBA8 Helper
+
 `RGBA8(r, g, b, alpha)` from `/colours` is a helper function that returns a `Colour` object directly.
+
 ```javascript
 // Correct:
 const fillColour = RGBA8(56, 189, 248, 255);
@@ -62,6 +64,7 @@ const altColour = Colour.createRGBA8({ r: 56, g: 189, b: 248, alpha: 255 });
 ```
 
 ### 2. Linear and Radial Gradients with Transforms
+
 Gradient coordinates in Affinity are positioned via matrix transforms:
 
 ```javascript
@@ -106,6 +109,7 @@ const fillDesc = FillDescriptor.create(
 ```
 
 ### 3. Adding Native Shapes Atomically
+
 Always batch nodes into `AddChildNodesCommandBuilder` so the entire layout is created in a single undo step:
 
 ```javascript
@@ -133,6 +137,7 @@ doc.executeCommand(cmd);
 ```
 
 ### 4. Custom Polygons, Curves & Paths
+
 Use `CurveBuilder` and `PolyCurve` for custom vector geometry:
 
 ```javascript
@@ -157,6 +162,7 @@ acnBuilder.addPolyCurveNode(pcnDef);
 ```
 
 ### 5. Visual Verification (`render_spread`)
+
 Call `render_spread` with the document's session UUID to inspect the rendered canvas:
 
 ```javascript
