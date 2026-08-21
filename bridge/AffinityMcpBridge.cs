@@ -29,14 +29,22 @@ namespace AffinityMcpBridge {
         }
 
         private static void ProcessMessage(string json) {
-            // Minimal fast JSON parsing
             int id = ExtractId(json);
             string method = ExtractField(json, "method");
 
             if (method == "initialize") {
                 EnsureAffinityConnected();
-                // Respond to IDE
-                string resp = "{\"jsonrpc\":\"2.0\",\"id\":" + id + ",\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"AffinityBuiltinBridge\",\"version\":\"1.0.0\"}}}";
+                string resp = "{\"jsonrpc\":\"2.0\",\"id\":" + id + ",\"result\":{" +
+                    "\"protocolVersion\":\"2024-11-05\"," +
+                    "\"capabilities\":{" +
+                        "\"tools\":{}," +
+                        "\"resources\":{}," +
+                        "\"prompts\":{}" +
+                    "}," +
+                    "\"serverInfo\":{" +
+                        "\"name\":\"AffinityBuiltinBridge\"," +
+                        "\"version\":\"1.1.0\"" +
+                    "}}}";
                 Console.WriteLine(resp);
                 Console.Out.Flush();
                 return;
@@ -83,9 +91,197 @@ namespace AffinityMcpBridge {
                 return;
             }
 
+            if (method == "resources/list") {
+                string resourcesJson = "{\"jsonrpc\":\"2.0\",\"id\":" + id + ",\"result\":{\"resources\":[" +
+                    "{" +
+                        "\"uri\":\"affinity://document/info\"," +
+                        "\"name\":\"Current Document Information\"," +
+                        "\"description\":\"Returns active document properties: dimensions (width, height), units, color format, color space, session UUID, spread count, and artboard count.\"," +
+                        "\"mimeType\":\"application/json\"" +
+                    "}," +
+                    "{" +
+                        "\"uri\":\"affinity://spread/artboards\"," +
+                        "\"name\":\"Spread Artboards List\"," +
+                        "\"description\":\"Returns list of all artboards in the active spread with their names, indices, and bounding box coordinates.\"," +
+                        "\"mimeType\":\"application/json\"" +
+                    "}," +
+                    "{" +
+                        "\"uri\":\"affinity://selection\"," +
+                        "\"name\":\"Active Layer Selection\"," +
+                        "\"description\":\"Returns the currently selected layers in Affinity, including node IDs, types, names, and bounding boxes.\"," +
+                        "\"mimeType\":\"application/json\"" +
+                    "}" +
+                "]}}";
+                Console.WriteLine(resourcesJson);
+                Console.Out.Flush();
+                return;
+            }
+
+            if (method == "resources/read") {
+                EnsureAffinityConnected();
+                string paramsJson = ExtractSubJson(json, "\"params\":");
+                string uri = ExtractField(paramsJson, "uri");
+                HandleResourceRead(id, uri);
+                return;
+            }
+
+            if (method == "prompts/list") {
+                string promptsJson = "{\"jsonrpc\":\"2.0\",\"id\":" + id + ",\"result\":{\"prompts\":[" +
+                    "{" +
+                        "\"name\":\"create-isometric-artwork\"," +
+                        "\"description\":\"Generate high-precision 2.5D isometric artwork, buildings, or icons with lighting and gradients in Affinity.\"," +
+                        "\"arguments\":[" +
+                            "{\"name\":\"theme\",\"description\":\"Theme or concept (e.g. 'cyberpunk city', 'fintech blockchain', 'datacenter')\",\"required\":true}," +
+                            "{\"name\":\"palette\",\"description\":\"Color scheme or palette mood (e.g. 'neon dark mode', 'pastel', 'corporate blue')\",\"required\":false}," +
+                            "{\"name\":\"artboardIndex\",\"description\":\"Target artboard index (default '0')\",\"required\":false}" +
+                        "]" +
+                    "}," +
+                    "{" +
+                        "\"name\":\"generate-icon-set\"," +
+                        "\"description\":\"Generate a cohesive set of grid-aligned vector app icons on designated artboards.\"," +
+                        "\"arguments\":[" +
+                            "{\"name\":\"category\",\"description\":\"Icon category or theme (e.g. 'finance', 'weather', 'media player', 'settings')\",\"required\":true}," +
+                            "{\"name\":\"count\",\"description\":\"Number of icons to generate (e.g. '6', '10')\",\"required\":false}," +
+                            "{\"name\":\"gridSize\",\"description\":\"Pixel grid size for each icon (e.g. '128', '256')\",\"required\":false}," +
+                            "{\"name\":\"style\",\"description\":\"Visual style (e.g. 'squircle glassmorphism', 'flat monochrome', 'gradient filled')\",\"required\":false}" +
+                        "]" +
+                    "}," +
+                    "{" +
+                        "\"name\":\"export-production-assets\"," +
+                        "\"description\":\"Inspect and prepare artboards and slices for production asset export with visual verification.\"," +
+                        "\"arguments\":[" +
+                            "{\"name\":\"formats\",\"description\":\"Target export formats (e.g. 'SVG, PNG@2x, PDF')\",\"required\":false}," +
+                            "{\"name\":\"artboardsOnly\",\"description\":\"Export individual artboards only ('true' or 'false')\",\"required\":false}" +
+                        "]" +
+                    "}" +
+                "]}}";
+                Console.WriteLine(promptsJson);
+                Console.Out.Flush();
+                return;
+            }
+
+            if (method == "prompts/get") {
+                string paramsJson = ExtractSubJson(json, "\"params\":");
+                string promptName = ExtractField(paramsJson, "name");
+                string argsJson = ExtractSubJson(paramsJson, "\"arguments\":");
+                HandlePromptGet(id, promptName, argsJson);
+                return;
+            }
+
             if (id > 0) {
                 SendError(id, -32601, "Method not found: " + method);
             }
+        }
+
+        private static void HandleResourceRead(int id, string uri) {
+            string script = "";
+            if (uri == "affinity://document/info") {
+                script = "(function() { try { const { Document } = require('/document'); const doc = Document.current; if (!doc) return JSON.stringify({ hasDocument: false, message: 'No active document open in Affinity.' }); const spread = doc.spreads.first; const abCount = (spread && spread.artboards) ? spread.artboards.length : 0; const bounds = spread ? { x: spread.bounds.x, y: spread.bounds.y, width: spread.bounds.width, height: spread.bounds.height } : null; return JSON.stringify({ hasDocument: true, name: doc.name || 'Untitled', sessionUuid: doc.sessionUuid || '', units: doc.units || 'Pixels', colourFormat: doc.colourFormat || 'RGB8', colourSpace: doc.colourSpace || 'sRGB', spreadCount: doc.spreads.length, artboardCount: abCount, bounds: bounds }); } catch (e) { return JSON.stringify({ error: e.message || String(e) }); } })()";
+            } else if (uri == "affinity://spread/artboards") {
+                script = "(function() { try { const { Document } = require('/document'); const doc = Document.current; if (!doc) return JSON.stringify({ hasDocument: false, artboards: [] }); const spread = doc.spreads.first; if (!spread) return JSON.stringify({ spreadIndex: -1, artboards: [] }); const abs = []; const count = spread.artboards ? spread.artboards.length : 0; for (let i = 0; i < count; i++) { const ab = spread.artboards[i]; abs.push({ index: i, name: ab.name || ('Artboard ' + (i + 1)), bounds: { x: ab.bounds.x, y: ab.bounds.y, width: ab.bounds.width, height: ab.bounds.height } }); } return JSON.stringify({ spreadIndex: 0, artboardCount: abs.length, artboards: abs }); } catch (e) { return JSON.stringify({ error: e.message || String(e) }); } })()";
+            } else if (uri == "affinity://selection") {
+                script = "(function() { try { const { Document } = require('/document'); const doc = Document.current; if (!doc) return JSON.stringify({ hasDocument: false, count: 0, selectedNodes: [] }); const sel = doc.selection || []; const nodes = []; for (let i = 0; i < sel.length; i++) { const n = sel[i]; nodes.push({ id: n.id || String(i), name: n.name || 'Node', type: n.type || 'Node', bounds: n.bounds ? { x: n.bounds.x, y: n.bounds.y, width: n.bounds.width, height: n.bounds.height } : null }); } return JSON.stringify({ count: nodes.length, selectedNodes: nodes }); } catch (e) { return JSON.stringify({ error: e.message || String(e) }); } })()";
+            } else {
+                SendError(id, -32602, "Unknown resource URI: " + uri);
+                return;
+            }
+
+            try {
+                string scriptArg = "{\"script\":" + EscapeString(script) + "}";
+                string result = CallAffinityTool("execute_script", scriptArg);
+                
+                string contentText = "{}";
+                if (result.Contains("\"text\":")) {
+                    contentText = ExtractField(result, "text");
+                    if (string.IsNullOrEmpty(contentText)) {
+                        contentText = ExtractSubJson(result, "\"text\":");
+                    }
+                } else if (result.Contains("\"result\":")) {
+                    contentText = ExtractSubJson(result, "\"result\":");
+                } else {
+                    contentText = result;
+                }
+
+                string resp = "{\"jsonrpc\":\"2.0\",\"id\":" + id + ",\"result\":{\"contents\":[{" +
+                    "\"uri\":" + EscapeString(uri) + "," +
+                    "\"mimeType\":\"application/json\"," +
+                    "\"text\":" + EscapeString(contentText) +
+                "}]}}";
+                Console.WriteLine(resp);
+                Console.Out.Flush();
+            } catch (Exception ex) {
+                SendError(id, -32603, "Error reading resource: " + ex.Message);
+            }
+        }
+
+        private static void HandlePromptGet(int id, string promptName, string argsJson) {
+            string theme = ExtractField(argsJson, "theme");
+            string palette = ExtractField(argsJson, "palette");
+            string artboardIndex = ExtractField(argsJson, "artboardIndex");
+            string category = ExtractField(argsJson, "category");
+            string count = ExtractField(argsJson, "count");
+            string gridSize = ExtractField(argsJson, "gridSize");
+            string style = ExtractField(argsJson, "style");
+            string formats = ExtractField(argsJson, "formats");
+            string artboardsOnly = ExtractField(argsJson, "artboardsOnly");
+
+            if (string.IsNullOrEmpty(artboardIndex)) artboardIndex = "0";
+            if (string.IsNullOrEmpty(count)) count = "6";
+            if (string.IsNullOrEmpty(gridSize)) gridSize = "128";
+            if (string.IsNullOrEmpty(formats)) formats = "SVG, PNG";
+
+            string promptText = "";
+
+            if (promptName == "create-isometric-artwork") {
+                if (string.IsNullOrEmpty(theme)) theme = "Modern Isometric Cityscape";
+                if (string.IsNullOrEmpty(palette)) palette = "Vibrant gradient with deep contrast";
+                promptText = "You are an expert Affinity Designer vector automation engineer. Create a high-detail 2.5D isometric vector artwork with the following specifications:\\n\\n" +
+                    "- Theme: " + theme + "\\n" +
+                    "- Color Palette: " + palette + "\\n" +
+                    "- Target Artboard: " + artboardIndex + "\\n\\n" +
+                    "Rules to follow:\\n" +
+                    "1. Query 'affinity://spread/artboards' to find artboard bounds.\\n" +
+                    "2. Construct 30-degree isometric projection planes (Top: 30°/-30°, Left: -30° vertical, Right: 30° vertical) using CurveBuilder and PolyCurve.\\n" +
+                    "3. Apply directional lighting with linear/radial gradients using matrix transforms (Transform.data).\\n" +
+                    "4. Batch all nodes into AddChildNodesCommandBuilder for a single atomic undo transaction.\\n" +
+                    "5. After creating the artwork, call 'render_spread' to visually inspect the final composition.";
+            } else if (promptName == "generate-icon-set") {
+                if (string.IsNullOrEmpty(category)) category = "General UI";
+                if (string.IsNullOrEmpty(style)) style = "Modern squircle glassmorphism with subtle gradient fills";
+                promptText = "You are an expert icon designer and Affinity vector automation specialist. Generate a cohesive set of " + count + " vector icons for the category '" + category + "'.\\n\\n" +
+                    "- Icon Style: " + style + "\\n" +
+                    "- Grid Size: " + gridSize + "x" + gridSize + " px per icon\\n\\n" +
+                    "Execution Workflow:\\n" +
+                    "1. Proactively read 'affinity://spread/artboards' to inspect existing layout.\\n" +
+                    "2. Compute grid positions with consistent padding and optical centering.\\n" +
+                    "3. Generate icon backplates (e.g. ShapeRectangle with corner radius) and foreground vector glyphs (CurveBuilder/PolyCurve or native shapes).\\n" +
+                    "4. Execute via 'execute_script' with AddChildNodesCommandBuilder for atomic transaction.\\n" +
+                    "5. Perform visual verification using 'render_spread'.";
+            } else if (promptName == "export-production-assets") {
+                promptText = "You are an Affinity production pipeline assistant. Prepare and inspect the current document for asset export:\\n\\n" +
+                    "- Formats: " + formats + "\\n" +
+                    "- Artboards Only: " + (string.IsNullOrEmpty(artboardsOnly) ? "true" : artboardsOnly) + "\\n\\n" +
+                    "Steps:\\n" +
+                    "1. Read 'affinity://document/info' and 'affinity://spread/artboards' to audit document resolution and geometry.\\n" +
+                    "2. Validate all artboard names and bounding box alignments (prevent subpixel blur).\\n" +
+                    "3. Render visual preview with 'render_spread' for QA verification.";
+            } else {
+                SendError(id, -32602, "Unknown prompt: " + promptName);
+                return;
+            }
+
+            string resp = "{\"jsonrpc\":\"2.0\",\"id\":" + id + ",\"result\":{" +
+                "\"description\":" + EscapeString("Recipe for " + promptName) + "," +
+                "\"messages\":[{" +
+                    "\"role\":\"user\"," +
+                    "\"content\":{" +
+                        "\"type\":\"text\"," +
+                        "\"text\":" + EscapeString(promptText) +
+                    "}" +
+                "}]" +
+            "}}";
+            Console.WriteLine(resp);
+            Console.Out.Flush();
         }
 
         private static void EnsureAffinityConnected() {
@@ -130,7 +326,7 @@ namespace AffinityMcpBridge {
                 postUrl = "http://[::1]:6767" + endpointPath;
 
                 // 1. Initialize Affinity with protocol 2025-11-25
-                string initJson = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{},\"clientInfo\":{\"name\":\"AntigravityIdeBridge\",\"version\":\"1.0.0\"}}}";
+                string initJson = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{},\"clientInfo\":{\"name\":\"AntigravityIdeBridge\",\"version\":\"1.1.0\"}}}";
                 client.PostAsync(postUrl, new StringContent(initJson, Encoding.UTF8, "application/json")).Wait();
 
                 while (true) {
@@ -140,7 +336,7 @@ namespace AffinityMcpBridge {
 
                 // 2. notifications/initialized
                 string notifJson = "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}";
-                client.PostAsync(postUrl, new StringContent(notifJson, Encoding.UTF8, "application/json")).Wait();
+                client.PostAsync(notifJson, new StringContent(notifJson, Encoding.UTF8, "application/json")).Wait();
 
                 // 3. Mandatory Preamble
                 CallAffinityToolInternal("read_sdk_documentation_topic", "{\"filename\":\"preamble\"}");

@@ -9,14 +9,21 @@ REM Check for CSC in PATH or Windows .NET Framework directory
 where csc >nul 2>nul
 if %errorlevel% equ 0 (
     echo [INFO] Found csc in PATH. Compiling...
-    csc /nologo /target:exe /out:affinity-mcp-bridge.exe AffinityMcpBridge.cs
+    csc /nologo /r:System.Net.Http.dll /target:exe /out:affinity-mcp-bridge.exe AffinityMcpBridge.cs
     goto finish
 )
 
 set CSC_FRAMEWORK=C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 if exist "%CSC_FRAMEWORK%" (
     echo [INFO] Found .NET Framework CSC at %CSC_FRAMEWORK%. Compiling...
-    "%CSC_FRAMEWORK%" /nologo /target:exe /out:affinity-mcp-bridge.exe AffinityMcpBridge.cs
+    "%CSC_FRAMEWORK%" /nologo /r:System.Net.Http.dll /target:exe /out:affinity-mcp-bridge.exe AffinityMcpBridge.cs
+    goto finish
+)
+
+set CSC_FRAMEWORK32=C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe
+if exist "%CSC_FRAMEWORK32%" (
+    echo [INFO] Found .NET Framework CSC at %CSC_FRAMEWORK32%. Compiling...
+    "%CSC_FRAMEWORK32%" /nologo /r:System.Net.Http.dll /target:exe /out:affinity-mcp-bridge.exe AffinityMcpBridge.cs
     goto finish
 )
 

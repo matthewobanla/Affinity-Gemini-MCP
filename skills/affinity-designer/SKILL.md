@@ -1,16 +1,27 @@
 ---
 name: affinity-designer
-description: Direct control and vector design automation in Affinity Designer, Photo, and Publisher via the built-in Affinity MCP Server and JavaScript SDK. Use when creating shapes, layouts, grids, colors, typography, artboards, layer transformations, or rendering canvas previews in Affinity.
+description: Direct control, vector design automation, and canvas inspection in Affinity Designer, Photo, and Publisher via the built-in Affinity MCP Server and JavaScript SDK. Use when creating shapes, layouts, grids, colors, typography, artboards, layer transformations, reading document info/artboards/selection via MCP resources, or rendering canvas previews in Affinity.
 ---
 
 # Affinity Design & Automation Skill
 
-This skill guides direct vector design, layout generation, and canvas manipulation in **Affinity by Canva** (v2/v3) using the native JavaScript SDK and the Affinity MCP Server.
+This skill guides direct vector design, layout generation, and canvas manipulation in **Affinity by Canva** (v2/v3) using the native JavaScript SDK, dedicated MCP Resources, and the Affinity MCP Server.
 
 ## Architecture
 
-* **MCP Bridge**: Connects Antigravity / Gemini via `stdio` JSON-RPC to Affinity's embedded SSE MCP Server (`http://[::1]:6767/sse`).
+* **MCP Bridge**: Connects Antigravity / Gemini via `stdio` JSON-RPC (MCP 2024-11-05) to Affinity's embedded SSE MCP Server (`http://[::1]:6767/sse`).
+* **MCP Resources**: Read-only instant URIs (`affinity://document/info`, `affinity://spread/artboards`, `affinity://selection`) to inspect canvas geometry without running scripts.
 * **Execution**: JavaScript runs natively inside Affinity's embedded engine with direct C++ memory handles.
+
+---
+
+## Fast Canvas Probing via MCP Resources
+
+Before generating or modifying graphics, probe the document state non-destructively:
+
+- **`affinity://document/info`**: Dimensions, units, color space, session UUID, spread and artboard count.
+- **`affinity://spread/artboards`**: List of all artboards with their bounding boxes (`x, y, width, height`).
+- **`affinity://selection`**: Active selected layers and their node properties.
 
 ---
 
@@ -88,7 +99,7 @@ const grad = Gradient.create([
 const fillDesc = FillDescriptor.create(
     GradientFill.create(grad, GradientFillType.Linear),
     false,
-    createLinearTransform(x1, y1, x2, y2),
+    createLinearTransform(0, 0, 400, 400),
     BlendMode.Normal,
     false
 );

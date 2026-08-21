@@ -1,7 +1,7 @@
 # Affinity MCP Integration for Google Gemini & Antigravity
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Affinity--Gemini--MCP-181717?logo=github)](https://github.com/matthewobanla/Affinity-Gemini-MCP)
-[![MCP Server](https://img.shields.io/badge/MCP-Protocol-blue.svg)](https://modelcontextprotocol.io/)
+[![MCP Server](https://img.shields.io/badge/MCP-Protocol%202024--11--05-blue.svg)](https://modelcontextprotocol.io/)
 [![Affinity Support](https://img.shields.io/badge/Serif%20Affinity-Designer%20%7C%20Photo%20%7C%20Publisher-orange.svg)](https://affinity.serif.com/)
 [![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Google%20Gemini-8E75B2.svg)](https://deepmind.google/technologies/gemini/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -12,6 +12,8 @@ Control, automate, and pair-program vector designs, artboards, and layouts in **
 
 ## 🌟 Features
 
+- **Dedicated MCP Resources**: Instant, non-destructive document probing via standard URIs (`affinity://document/info`, `affinity://spread/artboards`, `affinity://selection`).
+- **Standard MCP Prompts**: Built-in prompt recipes for creating isometric art, generating icon sets, and preparing production exports.
 - **Direct Vector Generation**: Create complex vector shapes, parametric curves, Bézier paths, squircle app icons, and polygons.
 - **Lighting & Shading**: Generate multi-stop linear and radial gradient fills with custom transform matrices, bevels, and specular highlights.
 - **Artboard & Spread Control**: Query artboard geometries, target specific artboards, and manage document layers.
@@ -24,16 +26,36 @@ Control, automate, and pair-program vector designs, artboards, and layouts in **
 
 ```text
 affinity-gemini-mcp/
-├── README.md                   # Setup guide and usage documentation
+├── README.md                   # Setup guide and feature documentation
+├── instructions.md             # In-depth LLM agent guidelines & SDK handbook
 ├── mcp_config.json             # Sample MCP server configuration
 ├── .gitignore                  # Git ignore rules for build artifacts
 ├── bridge/
 │   ├── AffinityMcpBridge.cs    # Zero-dependency C# stdio-to-SSE bridge source
-│   └── build.bat               # 1-click build script (csc / dotnet)
+│   ├── build.bat               # 1-click build script (csc / dotnet)
+│   └── affinity-mcp-bridge.exe # Compiled standalone bridge executable
 └── skills/
     └── affinity-designer/
         └── SKILL.md            # Agent skill with JavaScript SDK rules & patterns
 ```
+
+---
+
+## 📦 Dedicated MCP Capabilities
+
+### 1. MCP Resources (`resources/list`, `resources/read`)
+
+| URI | Name | Description |
+| :--- | :--- | :--- |
+| `affinity://document/info` | Document Information | Returns canvas dimensions, units, color format, color space, session UUID, spread and artboard count. |
+| `affinity://spread/artboards` | Spread Artboards | Returns list of all artboards in the active spread with indices, names, and bounding boxes. |
+| `affinity://selection` | Layer Selection | Returns list of currently selected layers with node IDs, types, names, and bounding boxes. |
+
+### 2. Standard MCP Prompts (`prompts/list`, `prompts/get`)
+
+- **`create-isometric-artwork`**: Generates high-detail 2.5D isometric geometry with directional lighting and 30-degree projection planes.
+- **`generate-icon-set`**: Generates a cohesive set of grid-aligned vector app icons on designated artboards.
+- **`export-production-assets`**: Audits document geometry, resolution, and artboard alignment for asset export.
 
 ---
 
@@ -68,10 +90,10 @@ cd bridge
 build.bat
 ```
 
-*Alternatively, compile manually with `csc` or `dotnet`:*
+*Alternatively, compile manually with `csc`:*
 
 ```cmd
-csc /target:exe /out:affinity-mcp-bridge.exe bridge\AffinityMcpBridge.cs
+csc /nologo /r:System.Net.Http.dll /target:exe /out:affinity-mcp-bridge.exe bridge\AffinityMcpBridge.cs
 ```
 
 This will produce `affinity-mcp-bridge.exe`.
@@ -132,6 +154,7 @@ Once configured, simply ask Gemini in Antigravity:
                        │ stdio (JSON-RPC 2.0)
 ┌──────────────────────▼───────────────────────┐
 │  affinity-mcp-bridge.exe (C# Bridge)         │
+│  - MCP 2024-11-05 Tools, Resources & Prompts │
 │  - Auto-negotiates protocol 2025-11-25       │
 │  - Handles mandatory SDK preamble            │
 └──────────────────────┬───────────────────────┘
